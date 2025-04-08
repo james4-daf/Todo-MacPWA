@@ -52,7 +52,7 @@ export default function WorkSessionTodo() {
 
     return (
         <div>
-            <h1 className="text-xl font-bold mb-4">This session&#39;s work</h1>
+            <h1 className="text-2xl font-bold mb-4">This session&#39;s work</h1>
             <Input
                 placeholder="Add a todo..."
                 value={input}

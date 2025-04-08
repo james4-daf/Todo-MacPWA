@@ -23,33 +23,27 @@ type TodoList = {
 };
 
 export function AppSidebar() {
-    const [userLists, setUserLists] = useState<TodoList[]>([]);
+    const [userLists, setUserLists] = useState<string[]>([]);
     const [newListTitle, setNewListTitle] = useState("");
     const router = useRouter();
 
     useEffect(() => {
-        const stored = localStorage.getItem("userTodoLists");
-        if (stored) {
-            try {
-                setUserLists(JSON.parse(stored));
-            } catch (e) {
-                console.error("Failed to parse stored todo lists:", e);
-            }
-        }
+        const keys = Object.keys(localStorage).filter(
+            (key) =>
+                !["userTodoLists", "workSessionTodos", "isWhitelist", "undefined"].includes(
+                    key
+                )
+        );
+        setUserLists(keys);
     }, []);
 
     const handleAddList = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && newListTitle.trim() !== "") {
-            const newUrl = `/${(newListTitle.trim())}`;
-            const newList: TodoList = {
-                title: newListTitle.trim(),
-                items: [],
-            };
-            const updatedLists = [...userLists, newList];
-            localStorage.setItem("userTodoLists", JSON.stringify(updatedLists));
-            setUserLists(updatedLists);
+            const newKey = newListTitle.trim();
+            localStorage.setItem(newKey, JSON.stringify([])); // empty list
+            setUserLists((prev) => [...prev, newKey]);
             setNewListTitle("");
-            router.push(newUrl);
+            router.push(`/${newKey}`);
         }
     };
 
@@ -70,10 +64,9 @@ export function AppSidebar() {
                             </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
-                    {userLists.map((list, id) => (
+                    {userLists.map((key, id) => (
                         <SidebarGroup key={id}>
-                            <Link href={list.title}>{list.title}</Link>
-
+                            <Link href={`/${key}`}>{key}</Link>
                         </SidebarGroup>
                     ))}
                 </SidebarGroup>
