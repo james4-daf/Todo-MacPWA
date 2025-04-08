@@ -16,12 +16,6 @@ import {
 import {Input} from "@/components/ui/input";
 import Link from "next/link";
 
-// Define the type of a stored list
-type TodoList = {
-    title: string;
-    items: { title: string; url: string }[];
-};
-
 export function AppSidebar() {
     const [userLists, setUserLists] = useState<string[]>([]);
     const [newListTitle, setNewListTitle] = useState("");
@@ -51,7 +45,7 @@ export function AppSidebar() {
         <Sidebar>
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>This session's todos</SidebarGroupLabel>
+                    <SidebarGroupLabel>This session&#39;s todos</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <SidebarMenuItem>
