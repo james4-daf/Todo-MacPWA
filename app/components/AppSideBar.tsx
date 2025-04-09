@@ -2,7 +2,6 @@
 import {Home, Plus} from "lucide-react";
 import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
-
 import {
     Sidebar,
     SidebarContent,
@@ -11,15 +10,22 @@ import {
     SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuButton,
-    SidebarMenuItem,
+    SidebarMenuItem
 } from "@/components/ui/sidebar";
 import {Input} from "@/components/ui/input";
 import Link from "next/link";
 
+import {useSidebar} from "@/components/ui/sidebar";
+
 export function AppSidebar() {
+    const {isMobile, setOpenMobile} = useSidebar();
     const [userLists, setUserLists] = useState<string[]>([]);
     const [newListTitle, setNewListTitle] = useState("");
     const router = useRouter();
+
+    const handleLinkClick = () => {
+        if (isMobile) setOpenMobile(false);
+    };
 
     useEffect(() => {
         const keys = Object.keys(localStorage).filter(
@@ -50,7 +56,7 @@ export function AppSidebar() {
                         <SidebarMenu>
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild>
-                                    <Link href="/">
+                                    <Link href="/" onClick={handleLinkClick}>
                                         <Home/>
                                         <span>Work Todos</span>
                                     </Link>
@@ -60,7 +66,7 @@ export function AppSidebar() {
                     </SidebarGroupContent>
                     {userLists.map((key, id) => (
                         <SidebarGroup key={id}>
-                            <Link href={`/${key}`}>{key}</Link>
+                            <Link href={`/${key}`} onClick={handleLinkClick}>{key}</Link>
                         </SidebarGroup>
                     ))}
                 </SidebarGroup>
