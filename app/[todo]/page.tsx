@@ -1,12 +1,11 @@
 "use client";
 
 import {Input} from "@/components/ui/input";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useParams} from "next/navigation";
 import {Separator} from "@/components/ui/separator";
 import {InputNoBorder} from "@/components/ui/inputNoBorder";
 import AiTodoUploader from "@/app/components/AiTodoUploader";
-import {completion} from "@/app/api/image-to-text/route";
 import {Button} from "@/components/ui/button";
 
 type TodoItem = {
@@ -17,6 +16,8 @@ type TodoItem = {
 export default function TodoPage() {
     const params = useParams();
     const [loading, setLoading] = useState(false);
+    const [file, setFile] = useState<File | null>(null);
+
     const [summary, setSummary] = useState<string | null>(null);
     const todo = params?.todo as string;
     const [input, setInput] = useState("");
@@ -63,13 +64,13 @@ export default function TodoPage() {
         }
     };
 
-    const toggleCompleted = (index: number) => {
-        setTodos((prev) =>
-            prev.map((todo, idx) =>
-                idx === index ? {...todo, completed: !todo.completed} : todo
-            )
-        );
-    };
+    // const toggleCompleted = (index: number) => {
+    //     setTodos((prev) =>
+    //         prev.map((todo, idx) =>
+    //             idx === index ? {...todo, completed: !todo.completed} : todo
+    //         )
+    //     );
+    // };
 
     const deleteTodo = (index: number) => {
         setTodos((prev) => prev.filter((_, idx) => idx !== index));
@@ -78,6 +79,46 @@ export default function TodoPage() {
     return (
         <div className="p-12">
             <h1 className="text-2xl font-bold mb-4">{todo}</h1>
+
+
+            <input
+                type="file"
+                placeholder='new upload'
+                accept="image/*"
+                onChange={(e) => {
+                    const selected = e.target.files?.[0];
+                    if (selected) {
+                        setFile(selected);
+                    }
+                }}
+            />
+
+            <Button
+                disabled={loading || !file || !!summary}
+                onClick={async () => {
+                    if (!file || summary || loading) return;
+                    setLoading(true);
+
+                    const formData = new FormData();
+                    formData.append("image", file);
+
+                    try {
+                        const res = await fetch("/api/image-to-text", {
+                            method: "POST",
+                            body: formData,
+                        });
+                        const data = await res.json();
+                        console.log("🧠 AI Summary:", data.text);
+                        setSummary(data.text);
+                    } catch (err) {
+                        console.error("❌ Upload failed:", err);
+                    } finally {
+                        setLoading(false);
+                    }
+                }}
+            >
+                {loading ? "Analyzing..." : summary ? "Done" : "Extract Text from Image"}
+            </Button>
             <p>Upload your paper todo</p>
             <AiTodoUploader/>
             <Button

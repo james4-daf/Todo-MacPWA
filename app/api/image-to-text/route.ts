@@ -1,51 +1,41 @@
-import fs from "fs";
+import {NextRequest, NextResponse} from "next/server";
+
+export const dynamic = "force-dynamic";
+
 import OpenAI from "openai";
-import path from "path";
-import {NextResponse} from "next/server";
 
 const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
 
-export async function GET() {
+export async function POST(req: NextRequest) {
     try {
-        console.log("🧠 /api/image-to-text called");
+        const formData = await req.formData();
+        const file = formData.get("image") as File;
 
-        const imagePath = "public/todolist.png";
-        console.log("🖼 Looking for:", imagePath);
-
-        if (!fs.existsSync(imagePath)) {
-            console.error("🚫 File does not exist!");
-            return NextResponse.json({error: "Image not found"}, {status: 404});
+        if (!file) {
+            return NextResponse.json({error: "No file uploaded"}, {status: 400});
         }
 
-        const base64Image = fs.readFileSync(imagePath, {encoding: 'base64',});
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const base64Image = `data:${file.type};base64,${buffer.toString("base64")}`;
 
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             messages: [
                 {
                     role: "user",
                     content: [
-                        {
-                            type: "text",
-                            text: "Create a json structure for all the items in the todo list Return only the json structure."
-                        },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                url: `data:image/png;base64,${base64Image}`,
-                            },
-                        },
+                        {type: "text", text: "Extract all visible text from this image. Return it as plain text."},
+                        {type: "image_url", image_url: {url: base64Image}},
                     ],
                 },
             ],
         });
 
         const text = completion.choices[0].message.content;
-        console.log("📝 GPT-4O output:", text);
-
         return NextResponse.json({text});
     } catch (err) {
-        console.error("🔥 API route error:", err);
-        return NextResponse.json({error: "Internal Server Error"}, {status: 500});
+        console.error("🔥 Error in image-to-text:", err);
+        return NextResponse.json({error: "Failed to extract text"}, {status: 500});
     }
 }
