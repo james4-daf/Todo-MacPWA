@@ -81,16 +81,16 @@ export default function TodoPage() {
             <h1 className="text-2xl font-bold mb-4">{todo}</h1>
 
 
-            <input
-                type="file"
-                placeholder='new upload'
-                accept="image/*"
-                onChange={(e) => {
-                    const selected = e.target.files?.[0];
-                    if (selected) {
-                        setFile(selected);
-                    }
-                }}
+            <input className='border-2'
+                   type="file"
+                   placeholder='new upload'
+                   accept="image/*"
+                   onChange={(e) => {
+                       const selected = e.target.files?.[0];
+                       if (selected) {
+                           setFile(selected);
+                       }
+                   }}
             />
 
             <Button
@@ -109,7 +109,23 @@ export default function TodoPage() {
                         });
                         const data = await res.json();
                         console.log("🧠 AI Summary:", data.text);
-                        setSummary(data.text);
+                        if (data.text) {
+                            setSummary(data.text);
+
+                            // turn raw text into lines
+                            const newItems = data.text
+                                .split("\n")
+                                .map((line: string) => line.trim())
+                                .filter((line: string) => line.length > 0)
+                                .map((text: string) => ({text, completed: false}));
+
+                            // merge with current list
+                            setTodos((prev) => {
+                                const updated = [...prev, ...newItems];
+                                localStorage.setItem(todo, JSON.stringify(updated));
+                                return updated;
+                            });
+                        }
                     } catch (err) {
                         console.error("❌ Upload failed:", err);
                     } finally {
