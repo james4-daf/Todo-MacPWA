@@ -5,6 +5,9 @@ import {useEffect, useState} from "react";
 import {useParams} from "next/navigation";
 import {Separator} from "@/components/ui/separator";
 import {InputNoBorder} from "@/components/ui/inputNoBorder";
+import AiTodoUploader from "@/app/components/AiTodoUploader";
+import {completion} from "@/app/api/image-to-text/route";
+import {Button} from "@/components/ui/button";
 
 type TodoItem = {
     text: string;
@@ -13,6 +16,8 @@ type TodoItem = {
 
 export default function TodoPage() {
     const params = useParams();
+    const [loading, setLoading] = useState(false);
+    const [summary, setSummary] = useState<string | null>(null);
     const todo = params?.todo as string;
     const [input, setInput] = useState("");
     const [todos, setTodos] = useState<TodoItem[]>([]);
@@ -46,6 +51,7 @@ export default function TodoPage() {
         }
     };
 
+
     const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
         if (e.key === "Enter" && editInput.trim() !== "") {
             setTodos((prev) =>
@@ -72,6 +78,35 @@ export default function TodoPage() {
     return (
         <div className="p-12">
             <h1 className="text-2xl font-bold mb-4">{todo}</h1>
+            <p>Upload your paper todo</p>
+            <AiTodoUploader/>
+            <Button
+                disabled={loading}
+                onClick={async () => {
+                    if (summary || loading) return;
+                    if (loading) return;
+                    setLoading(true);
+
+                    console.log("📤 Uploading to /api/image-to-text");
+
+                    try {
+                        const res = await fetch("/api/image-to-text");
+                        const data = await res.json();
+                        console.log("AI Summary:", data.text);
+                        // already fetched
+                        setLoading(true);
+
+// fetch...
+                        setSummary(data.text);
+                    } catch (err) {
+                        console.error("❌ Error fetching text summary:", err);
+                    } finally {
+                        setLoading(false);
+                    }
+                }}
+            >
+                {loading ? "Extracting..." : "Text Summary"}
+            </Button>
             <Input
                 placeholder="Add a todo..."
                 value={input}

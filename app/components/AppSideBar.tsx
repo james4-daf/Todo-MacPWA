@@ -16,6 +16,7 @@ import {Input} from "@/components/ui/input";
 import Link from "next/link";
 
 import {useSidebar} from "@/components/ui/sidebar";
+import {Button} from "@/components/ui/button";
 
 export function AppSidebar() {
     const {isMobile, setOpenMobile} = useSidebar();
@@ -91,7 +92,7 @@ export function AppSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-
+                <Button>Add paper todo</Button>
             </SidebarContent>
         </Sidebar>
     );
