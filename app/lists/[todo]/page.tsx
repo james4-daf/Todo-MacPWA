@@ -146,6 +146,7 @@ export default function TodoPage() {
             </Button>
 
             <Input
+                type='text'
                 placeholder="Add a todo..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -164,6 +165,7 @@ export default function TodoPage() {
                     >
                         {editingIndex === idx ? (
                             <InputNoBorder
+                                type='text'
                                 autoFocus
                                 value={editInput}
                                 onChange={(e) => setEditInput(e.target.value)}

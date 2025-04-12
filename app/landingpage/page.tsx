@@ -50,7 +50,7 @@ export default function LandingPage() {
             </section>
 
             <Button asChild size="lg">
-                <Link href="/app">Get Started</Link>
+                <Link href="/lists">Get Started</Link>
             </Button>
         </div>
     );

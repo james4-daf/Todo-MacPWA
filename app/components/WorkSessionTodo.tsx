@@ -54,6 +54,7 @@ export default function WorkSessionTodo() {
         <div>
             <h1 className="text-2xl font-bold mb-4">This session&#39;s work</h1>
             <Input
+                type='text'
                 placeholder="Add a todo..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

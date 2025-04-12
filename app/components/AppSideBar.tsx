@@ -14,14 +14,15 @@ import {
 } from "@/components/ui/sidebar";
 import {Input} from "@/components/ui/input";
 import Link from "next/link";
-
 import {useSidebar} from "@/components/ui/sidebar";
 import {Button} from "@/components/ui/button";
+import {Skeleton} from "@/components/ui/skeleton";
 
 export function AppSidebar() {
     const {isMobile, setOpenMobile} = useSidebar();
     const [userLists, setUserLists] = useState<string[]>([]);
     const [newListTitle, setNewListTitle] = useState("");
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     const handleLinkClick = () => {
@@ -29,13 +30,16 @@ export function AppSidebar() {
     };
 
     useEffect(() => {
-        const keys = Object.keys(localStorage).filter(
-            (key) =>
-                !["userTodoLists", "workSessionTodos", "isWhitelist", "undefined"].includes(
-                    key
-                )
-        );
-        setUserLists(keys);
+        setTimeout(() => {
+            if (typeof window !== "undefined") {
+                const keys = Object.keys(localStorage).filter(
+                    (key) =>
+                        !["userTodoLists", "workSessionTodos", "isWhitelist", "undefined"].includes(key)
+                );
+                setUserLists(keys);
+                setLoading(false);
+            }
+        }, 1000);
     }, []);
 
     const handleAddList = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -44,7 +48,7 @@ export function AppSidebar() {
             localStorage.setItem(newKey, JSON.stringify([])); // empty list
             setUserLists((prev) => [...prev, newKey]);
             setNewListTitle("");
-            router.push(`/${newKey}`);
+            router.push(`/lists/${newKey}`);
         }
     };
 
@@ -57,7 +61,7 @@ export function AppSidebar() {
                         <SidebarMenu>
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild>
-                                    <Link href="/" onClick={handleLinkClick}>
+                                    <Link href="/lists/thissession" onClick={handleLinkClick}>
                                         <Home/>
                                         <span>Work Todos</span>
                                     </Link>
@@ -65,11 +69,19 @@ export function AppSidebar() {
                             </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
-                    {userLists.map((key, id) => (
-                        <SidebarGroup key={id}>
-                            <Link href={`/${key}`} onClick={handleLinkClick}>{key}</Link>
-                        </SidebarGroup>
-                    ))}
+                    {loading ? (
+                        <div className="space-y-2 px-4 py-2">
+                            <Skeleton className="h-4 w-3/4 rounded-xl"/>
+                            <Skeleton className="h-4 w-2/3 rounded-full"/>
+                            <Skeleton className="h-4 w-1/2 rounded-full"/>
+                        </div>
+                    ) : (
+                        userLists.map((key, id) => (
+                            <SidebarGroup key={id}>
+                                <Link href={`/lists/${key}`} onClick={handleLinkClick}>{key}</Link>
+                            </SidebarGroup>
+                        ))
+                    )}
                 </SidebarGroup>
 
                 <SidebarGroup>
@@ -80,6 +92,7 @@ export function AppSidebar() {
                                     <div className="flex items-center gap-2 w-full px-2">
                                         <Plus/>
                                         <Input
+                                            type='text'
                                             placeholder='Add another todo list'
                                             value={newListTitle}
                                             onChange={(e) => setNewListTitle(e.target.value)}
