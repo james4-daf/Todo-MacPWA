@@ -5,7 +5,8 @@ import React, {useEffect, useState} from "react";
 import {useParams} from "next/navigation";
 import {Separator} from "@/components/ui/separator";
 import {InputNoBorder} from "@/components/ui/inputNoBorder";
-import AiTodoUploader from "@/app/components/AiTodoUploader";
+import {toast} from "sonner";
+import {Loader2} from "lucide-react";
 import {Button} from "@/components/ui/button";
 
 type TodoItem = {
@@ -80,8 +81,8 @@ export default function TodoPage() {
         <div className="p-12">
             <h1 className="text-2xl font-bold mb-4">{todo}</h1>
 
-
-            <input className='border-2'
+            <p>Upload your paper todo</p>
+            <Input className='border-2 mb-4'
                    type="file"
                    placeholder='new upload'
                    accept="image/*"
@@ -94,10 +95,11 @@ export default function TodoPage() {
             />
 
             <Button
-                disabled={loading || !file || !!summary}
+                disabled={loading || !file}
                 onClick={async () => {
-                    if (!file || summary || loading) return;
+                    if (!file || loading) return;
                     setLoading(true);
+                    toast("Analyzing Image...");
 
                     const formData = new FormData();
                     formData.append("image", file);
@@ -125,6 +127,8 @@ export default function TodoPage() {
                                 localStorage.setItem(todo, JSON.stringify(updated));
                                 return updated;
                             });
+                            setSummary(null);
+                            setFile(null);
                         }
                     } catch (err) {
                         console.error("❌ Upload failed:", err);
@@ -133,37 +137,14 @@ export default function TodoPage() {
                     }
                 }}
             >
-                {loading ? "Analyzing..." : summary ? "Done" : "Extract Text from Image"}
+                {loading ? (
+                    <>
+                        Analyzing...
+                        <Loader2 className="animate-spin h-4 w-4 mr-2"/>
+                    </>
+                ) : summary ? "Done" : "Extract todo from Image"}
             </Button>
-            <p>Upload your paper todo</p>
-            <AiTodoUploader/>
-            <Button
-                disabled={loading}
-                onClick={async () => {
-                    if (summary || loading) return;
-                    if (loading) return;
-                    setLoading(true);
 
-                    console.log("📤 Uploading to /api/image-to-text");
-
-                    try {
-                        const res = await fetch("/api/image-to-text");
-                        const data = await res.json();
-                        console.log("AI Summary:", data.text);
-                        // already fetched
-                        setLoading(true);
-
-// fetch...
-                        setSummary(data.text);
-                    } catch (err) {
-                        console.error("❌ Error fetching text summary:", err);
-                    } finally {
-                        setLoading(false);
-                    }
-                }}
-            >
-                {loading ? "Extracting..." : "Text Summary"}
-            </Button>
             <Input
                 placeholder="Add a todo..."
                 value={input}
