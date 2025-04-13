@@ -6,7 +6,7 @@ import {useParams} from "next/navigation";
 import {Separator} from "@/components/ui/separator";
 import {InputNoBorder} from "@/components/ui/inputNoBorder";
 import {toast} from "sonner";
-import {Loader2} from "lucide-react";
+import {Loader2, Square, SquareCheckBig} from "lucide-react";
 import {Button} from "@/components/ui/button";
 
 type TodoItem = {
@@ -53,7 +53,6 @@ export default function TodoPage() {
         }
     };
 
-
     const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
         if (e.key === "Enter" && editInput.trim() !== "") {
             setTodos((prev) =>
@@ -65,13 +64,13 @@ export default function TodoPage() {
         }
     };
 
-    // const toggleCompleted = (index: number) => {
-    //     setTodos((prev) =>
-    //         prev.map((todo, idx) =>
-    //             idx === index ? {...todo, completed: !todo.completed} : todo
-    //         )
-    //     );
-    // };
+    const toggleCompleted = (index: number) => {
+        setTodos((prev) =>
+            prev.map((todo, idx) =>
+                idx === index ? {...todo, completed: !todo.completed} : todo
+            )
+        );
+    };
 
     const deleteTodo = (index: number) => {
         setTodos((prev) => prev.filter((_, idx) => idx !== index));
@@ -152,48 +151,55 @@ export default function TodoPage() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
             />
-            <ul className="mt-4 list-disc space-y-2">
+            <ul className="mt-4 list-none space-y-2">
                 {todos.map((todo, idx) => (
-                    <li
-                        key={idx}
-                        className="items-center py-3 space-x-2 pl-2 hover:bg-gray-50 hover:cursor-text"
-                        // onDoubleClick={() => toggleCompleted(idx)}
-                        onClick={() => {
-                            setEditingIndex(idx);
-                            setEditInput(todo.text);
-                        }}
-                    >
-                        {editingIndex === idx ? (
-                            <InputNoBorder
-                                type='text'
-                                autoFocus
-                                value={editInput}
-                                onChange={(e) => setEditInput(e.target.value)}
-                                onKeyDown={(e) => handleEditKeyDown(e, idx)}
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                        ) : (
-                            <span
-                                // className={`${
-                                //     todo.completed ? "line-through" : ""
-                                // } cursor-pointer`}
-                            >
-                                {todo.text}
-                            </span>
-                        )}
-                        {todo.completed && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteTodo(idx);
+                    <div key={idx}>
+                        <li
+
+                            className={`flex items-center py-3 px-2 space-x-2 rounded cursor-pointer ${
+                                todo.completed ? "bg-gray-100 text-gray-500 line-through" : "hover:bg-gray-50"
+                            }`}
+                        >
+                        <span onClick={() => toggleCompleted(idx)} className="cursor-pointer">
+                            {todo.completed ? <SquareCheckBig/> : <Square/>}
+                        </span>
+                            <div
+                                className="flex-1"
+                                onClick={() => {
+                                    setEditingIndex(idx);
+                                    setEditInput(todo.text);
                                 }}
-                                className="ml-2 text-red-500 hover:text-red-700 hover:cursor-pointer"
                             >
-                                X
-                            </button>
-                        )}
+                                {editingIndex === idx ? (
+                                    <InputNoBorder
+                                        type="text"
+                                        autoFocus
+                                        value={editInput}
+                                        onChange={(e) => setEditInput(e.target.value)}
+                                        onKeyDown={(e) => handleEditKeyDown(e, idx)}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                ) : (
+                                    <span>{todo.text}</span>
+                                )}
+                            </div>
+                            {todo.completed && (
+                                <>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteTodo(idx);
+                                        }}
+                                        className="ml-2 text-red-500 hover:text-red-700 hover:cursor-pointer"
+                                    >
+                                        X
+                                    </button>
+
+                                </>
+                            )}
+                        </li>
                         <Separator className=""/>
-                    </li>
+                    </div>
                 ))}
             </ul>
         </div>

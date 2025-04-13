@@ -31,14 +31,14 @@ export function AppSidebar() {
 
     useEffect(() => {
         setTimeout(() => {
-            if (typeof window !== "undefined") {
-                const keys = Object.keys(localStorage).filter(
-                    (key) =>
-                        !["userTodoLists", "workSessionTodos", "isWhitelist", "undefined"].includes(key)
-                );
-                setUserLists(keys);
-                setLoading(false);
-            }
+
+            const keys = Object.keys(localStorage).filter(
+                (key) =>
+                    !["userTodoLists", "workSessionTodos", "isWhitelist", "undefined"].includes(key)
+            );
+            setUserLists(keys);
+            setLoading(false);
+
         }, 1000);
     }, []);
 
