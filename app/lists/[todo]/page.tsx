@@ -6,7 +6,7 @@ import {useParams} from "next/navigation";
 import {Separator} from "@/components/ui/separator";
 import {InputNoBorder} from "@/components/ui/inputNoBorder";
 import {toast} from "sonner";
-import {Loader2, Square, SquareCheckBig} from "lucide-react";
+import {Loader2, NotepadText, Square, SquareCheckBig} from "lucide-react";
 import {Button} from "@/components/ui/button";
 
 type TodoItem = {
@@ -17,6 +17,7 @@ type TodoItem = {
 export default function TodoPage() {
     const params = useParams();
     const [loading, setLoading] = useState(false);
+    const [showUploadTodo, setShowUploadTodo] = useState<boolean>(false)
     const [file, setFile] = useState<File | null>(null);
 
     const [summary, setSummary] = useState<string | null>(null);
@@ -78,73 +79,87 @@ export default function TodoPage() {
 
     return (
         <div className="p-12">
-            <h1 className="text-2xl font-bold mb-4">{todo}</h1>
+            <div className='flex'>
 
-            <p>Upload your paper todo</p>
-            <Input className='border-2 mb-4'
-                   type="file"
-                   placeholder='new upload'
-                   accept="image/*"
-                   onChange={(e) => {
-                       const selected = e.target.files?.[0];
-                       if (selected) {
-                           setFile(selected);
-                       }
-                   }}
-            />
+                <h1 className="text-2xl font-bold mb-4 pr-18">{todo}</h1>
 
-            <Button
-                disabled={loading || !file}
-                onClick={async () => {
-                    if (!file || loading) return;
-                    setLoading(true);
-                    toast("Analyzing Image...");
+                <Button className='cursor-pointer' onClick={() => setShowUploadTodo((prev) => !prev)}>Upload your paper
+                    todo<NotepadText/></Button>
+            </div>
+            {showUploadTodo && (
+                <>
+                    <Input className='border-2 mb-4 cursor-pointer'
+                           type="file"
 
-                    const formData = new FormData();
-                    formData.append("image", file);
+                           placeholder='new upload'
+                           accept="image/*"
+                           onChange={(e) => {
+                               const selected = e.target.files?.[0];
+                               if (selected) {
+                                   setFile(selected);
+                               }
+                           }}
+                    />
 
-                    try {
-                        const res = await fetch("/api/image-to-text", {
-                            method: "POST",
-                            body: formData,
-                        });
-                        const data = await res.json();
-                        console.log("🧠 AI Summary:", data.text);
-                        if (data.text) {
-                            setSummary(data.text);
+                    <Button
+                        disabled={loading || !file}
+                        className='cursor-pointer mb-4'
+                        onClick={async () => {
+                            if (!file || loading) return;
+                            setLoading(true);
+                            toast("Analyzing Image...");
 
-                            // turn raw text into lines
-                            const newItems = data.text
-                                .split("\n")
-                                .map((line: string) => line.trim())
-                                .filter((line: string) => line.length > 0)
-                                .map((text: string) => ({text, completed: false}));
+                            const formData = new FormData();
+                            formData.append("image", file);
 
-                            // merge with current list
-                            setTodos((prev) => {
-                                const updated = [...prev, ...newItems];
-                                localStorage.setItem(todo, JSON.stringify(updated));
-                                return updated;
-                            });
-                            setSummary(null);
-                            setFile(null);
-                        }
-                    } catch (err) {
-                        console.error("❌ Upload failed:", err);
-                    } finally {
-                        setLoading(false);
-                    }
-                }}
-            >
-                {loading ? (
-                    <>
-                        Analyzing...
-                        <Loader2 className="animate-spin h-4 w-4 mr-2"/>
-                    </>
-                ) : summary ? "Done" : "Extract todo from Image"}
-            </Button>
+                            try {
+                                const res = await fetch("/api/image-to-text", {
+                                    method: "POST",
+                                    body: formData,
+                                });
+                                const data = await res.json();
+                                console.log("🧠 AI Summary:", data.text);
+                                if (data.text) {
+                                    setSummary(data.text);
+
+                                    // turn raw text into lines
+                                    const newItems = data.text
+                                        .split("\n")
+                                        .map((line: string) => line.trim())
+                                        .filter((line: string) => line.length > 0)
+                                        .map((text: string) => ({text, completed: false}));
+
+                                    // merge with current list
+                                    setTodos((prev) => {
+                                        const updated = [...prev, ...newItems];
+                                        localStorage.setItem(todo, JSON.stringify(updated));
+                                        return updated;
+                                    });
+                                    setSummary(null);
+                                    setFile(null);
+                                }
+                            } catch (err) {
+                                console.error("❌ Upload failed:", err);
+                            } finally {
+                                setLoading(false);
+                                setShowUploadTodo(false)
+                                toast("Successfully added todos")
+                            }
+                        }}
+                    >
+                        {loading ? (
+                            <>
+                                Analyzing...
+                                <Loader2 className="animate-spin h-4 w-4 mr-2"/>
+                            </>
+                        ) : summary ? "Done" : "Extract todo from Image"}
+                    </Button>
+                </>
+            )
+            }
 
             <Input
+
                 type='text'
                 placeholder="Add a todo..."
                 value={input}
