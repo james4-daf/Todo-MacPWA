@@ -1,7 +1,6 @@
-"use client"
-import {Home, Plus} from "lucide-react";
-import {useEffect, useState} from "react";
-import {useRouter} from "next/navigation";
+'use client';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
 import {
     Sidebar,
     SidebarContent,
@@ -10,18 +9,33 @@ import {
     SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuButton,
-    SidebarMenuItem
-} from "@/components/ui/sidebar";
-import {Input} from "@/components/ui/input";
-import Link from "next/link";
-import {useSidebar} from "@/components/ui/sidebar";
-import {Button} from "@/components/ui/button";
-import {Skeleton} from "@/components/ui/skeleton";
+    SidebarMenuItem,
+    useSidebar,
+} from '@/components/ui/sidebar';
+import {useAtom} from 'jotai';
+import {todoListsAtom} from '@/app/state/todoLists';
+import {Skeleton} from '@/components/ui/skeleton';
+import {Home, Plus} from 'lucide-react';
+import Link from 'next/link';
+import {useRouter} from 'next/navigation';
+import {useEffect, useState} from 'react';
+import {useSyncTodoLists} from "@/app/hooks/useSyncTodoLists";
+
+
+function slugify(title: string) {
+    return title.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
+}
+
+function unslugify(slug: string) {
+    return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export function AppSidebar() {
+    const syncTodoLists = useSyncTodoLists();
+    const [userLists, setUserLists] = useAtom(todoListsAtom);
     const {isMobile, setOpenMobile} = useSidebar();
-    const [userLists, setUserLists] = useState<string[]>([]);
-    const [newListTitle, setNewListTitle] = useState("");
+    // const [userLists, setUserLists] = useState<string[]>([]);
+    const [newListTitle, setNewListTitle] = useState('');
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
@@ -31,23 +45,18 @@ export function AppSidebar() {
 
     useEffect(() => {
         setTimeout(() => {
-
-            const keys = Object.keys(localStorage).filter(
-                (key) =>
-                    !["userTodoLists", "workSessionTodos", "isWhitelist", "undefined"].includes(key)
-            );
-            setUserLists(keys);
+            syncTodoLists();
             setLoading(false);
-
         }, 1000);
-    }, []);
+    }, [syncTodoLists]);
 
     const handleAddList = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && newListTitle.trim() !== "") {
-            const newKey = newListTitle.trim();
+        if (e.key === 'Enter' && newListTitle.trim() !== '') {
+            const newKey = slugify(newListTitle);
+            console.log(newKey);
             localStorage.setItem(newKey, JSON.stringify([])); // empty list
             setUserLists((prev) => [...prev, newKey]);
-            setNewListTitle("");
+            setNewListTitle('');
             router.push(`/lists/${newKey}`);
         }
     };
@@ -78,7 +87,9 @@ export function AppSidebar() {
                     ) : (
                         userLists.map((key, id) => (
                             <SidebarGroup key={id}>
-                                <Link href={`/lists/${key}`} onClick={handleLinkClick}>{key}</Link>
+                                <Link href={`/lists/${key}`} onClick={handleLinkClick}>
+                                    {unslugify(key)}
+                                </Link>
                             </SidebarGroup>
                         ))
                     )}
@@ -92,8 +103,8 @@ export function AppSidebar() {
                                     <div className="flex items-center gap-2 w-full px-2">
                                         <Plus/>
                                         <Input
-                                            type='text'
-                                            placeholder='Add another todo list'
+                                            type="text"
+                                            placeholder="Add another todo list"
                                             value={newListTitle}
                                             onChange={(e) => setNewListTitle(e.target.value)}
                                             onKeyDown={handleAddList}
