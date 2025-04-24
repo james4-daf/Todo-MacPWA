@@ -1,21 +1,27 @@
-// app/api/extract-todos/route.ts
+// app/api/ai-report-summary/route.ts
 import {NextRequest, NextResponse} from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
     try {
-        const formData = await req.formData();
-        const file = formData.get("image") as File;
+        const {url} = await req.json();
 
-        if (!file) {
-            return NextResponse.json({error: "No image file found"}, {status: 400});
+        if (!url) {
+            return NextResponse.json({error: "No URL provided"}, {status: 400});
         }
 
-        const arrayBuffer = await file.arrayBuffer();
-        const base64Image = `data:${file.type};base64,${Buffer.from(arrayBuffer).toString("base64")}`;
+        const htmlResponse = await fetch(url);
+        const html = await htmlResponse.text();
 
-        const prompt = `Read all visible text from this handwritten note image. Return the raw text exactly as it appears, without rephrasing or summarizing.`;
+        const prompt = `
+      Analyze the following HTML document, which represents a financial quarterly report filed with the SEC.
+      Summarize the report in 6 concise bullet points. Focus on key financial results, business highlights, risks, or forward-looking statements.
+      Return only the summary.
+
+      HTML:
+      ${html}
+    `;
 
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
@@ -24,28 +30,23 @@ export async function POST(req: NextRequest) {
                 Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
             },
             body: JSON.stringify({
-                model: "gpt-4-vision-preview",
+                model: "gpt-4",
                 messages: [
                     {
                         role: "user",
-                        content: [
-                            {type: "text", text: prompt},
-                            {type: "image_url", image_url: {url: base64Image}},
-                        ],
+                        content: prompt,
                     },
                 ],
-                max_tokens: 500,
+                max_tokens: 600,
             }),
         });
 
         const data = await response.json();
-        // console.log("AI raw response route:", data);
-        const text = data?.choices?.[0]?.message?.content || "";
-        console.log("AI raw output:\n", text);
+        const summary = data?.choices?.[0]?.message?.content || "";
 
-        return NextResponse.json({text});
+        return NextResponse.json({summary});
     } catch (err) {
-        console.error("OCR error:", err);
-        return NextResponse.json({error: "Failed to extract todos"}, {status: 500});
+        console.error("Summary generation error:", err);
+        return NextResponse.json({error: "Failed to generate summary"}, {status: 500});
     }
 }
